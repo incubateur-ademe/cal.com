@@ -156,7 +156,7 @@ const workspaces = packagedEmbedTestsOnly
           name: "@calcom/features/form-builder",
           include: ["packages/features/form-builder/**/*.{test,spec}.[jt]s?(x)"],
           environment: "jsdom",
-          setupFiles: ["@calcom/features/form-builder/test-setup.ts"],
+          setupFiles: ["packages/ui/components/test-setup.ts"],
         },
       },
       {
