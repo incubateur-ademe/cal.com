@@ -19,7 +19,7 @@
     "copy-static": "turbo run copy-app-store-static",
     "copy-app-store-static": "node scripts/copy-app-store-static.js",
     "build": "turbo run copy-app-store-static && next build && yarn sentry:release",
-    "start": "next start",
+    "start": "next start -p 8080",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "lint:report": "eslint . --format json --output-file ../../lint-results/web.json",
