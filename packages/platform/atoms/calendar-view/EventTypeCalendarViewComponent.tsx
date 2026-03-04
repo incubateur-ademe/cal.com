@@ -1,20 +1,19 @@
 import { useMemo } from "react";
 import { shallow } from "zustand/shallow";
 
-import dayjs from "@calcom/dayjs";
 import {
   useBookerStoreContext,
   useInitializeBookerStoreContext,
 } from "@calcom/features/bookings/Booker/BookerStoreProvider";
-import { Header } from "@calcom/features/bookings/Booker/components/Header";
-import { BookerSection } from "@calcom/features/bookings/Booker/components/Section";
-import { useAvailableTimeSlots } from "@calcom/features/bookings/Booker/components/hooks/useAvailableTimeSlots";
-import { useBookerLayout } from "@calcom/features/bookings/Booker/components/hooks/useBookerLayout";
-import { usePrefetch } from "@calcom/features/bookings/Booker/components/hooks/usePrefetch";
+import { Header } from "@calcom/features/bookings/components/Header";
+import { BookerSection } from "@calcom/features/bookings/components/Section";
+import { useAvailableTimeSlots } from "@calcom/features/bookings/Booker/hooks/useAvailableTimeSlots";
+import { useBookerLayout } from "@calcom/features/bookings/Booker/hooks/useBookerLayout";
+import { useStableTimezone } from "@calcom/features/bookings/Booker/hooks/useStableTimezone";
 import { useTimePreferences } from "@calcom/features/bookings/lib";
-import { LargeCalendar } from "@calcom/features/calendar-view/LargeCalendar";
+import { LargeCalendar } from "./components/LargeCalendar";
 import { getUsernameList } from "@calcom/features/eventtypes/lib/defaultEvents";
-import { useTimesForSchedule } from "@calcom/features/schedules/lib/use-schedule/useTimesForSchedule";
+import { useTimesForSchedule } from "@calcom/features/schedules/hooks/useTimesForSchedule";
 
 import { formatUsername } from "../booker/BookerPlatformWrapper";
 import type {
@@ -59,31 +58,24 @@ export const EventTypeCalendarViewComponent = (
 
   const bookerLayout = useBookerLayout(event.data?.profile?.bookerLayouts);
 
-  const [bookerState, _setBookerState] = useBookerStoreContext(
-    (state) => [state.state, state.setState],
-    shallow
-  );
   const selectedDate = useBookerStoreContext((state) => state.selectedDate);
-  const date = dayjs(selectedDate).format("YYYY-MM-DD");
   const month = useBookerStoreContext((state) => state.month);
   const [dayCount] = useBookerStoreContext((state) => [state.dayCount, state.setDayCount], shallow);
 
-  const { prefetchNextMonth, monthCount } = usePrefetch({
-    date,
-    month,
-    bookerLayout,
-    bookerState,
-  });
-
   const [startTime, endTime] = useTimesForSchedule({
     month,
-    monthCount,
     dayCount,
-    prefetchNextMonth,
     selectedDate,
+    bookerLayout,
   });
 
-  const { timezone } = useTimePreferences();
+  const { timezone: rawTimezone } = useTimePreferences();
+  const timezone = useStableTimezone(
+    rawTimezone,
+    event?.data?.restrictionScheduleId != null
+      ? { id: event.data.restrictionScheduleId, useBookerTimezone: event.data.useBookerTimezone }
+      : undefined
+  );
   const isDynamic = useMemo(() => {
     return getUsernameList(username ?? "").length > 1;
   }, [username]);
@@ -127,7 +119,7 @@ export const EventTypeCalendarViewComponent = (
   const selectedEventDuration = useBookerStoreContext((state) => state.selectedDuration);
   const eventDuration = selectedEventDuration || event?.data?.length || 30;
 
-  const availableTimeSlots = useAvailableTimeSlots({ schedule: schedule.data, eventDuration });
+  const availableTimeSlots= useAvailableTimeSlots({ schedule: schedule.data, eventDuration });
 
   return (
     <AtomsWrapper>
